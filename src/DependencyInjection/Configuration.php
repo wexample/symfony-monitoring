@@ -34,6 +34,9 @@ class Configuration implements ConfigurationInterface
                 ->arrayNode('heartbeats')
                     ->info('What must keep running, by key: beaten with HeartbeatService::beat(), an incident when it misses its interval.')
                     ->useAttributeAsKey('key')
+                    // Keys are names from the code — a command's, `app:import:senat-debates` —:
+                    // their dashes stay dashes.
+                    ->normalizeKeys(false)
                     ->arrayPrototype()
                         ->children()
                             ->scalarNode('label')->defaultNull()->end()

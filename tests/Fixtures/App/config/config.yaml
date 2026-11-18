@@ -38,7 +38,7 @@ wexample_symfony_monitoring:
   alerts:
     min_severity: error
   heartbeats:
-    import.nightly:
+    'app:import:nightly-run':
       label: Nightly import
       every: '1 day'
 

@@ -140,7 +140,7 @@ class IncidentTest extends KernelTestCase
     {
         /** @var HeartbeatService $heartbeats */
         $heartbeats = self::getContainer()->get('test.heartbeat_service');
-        $source = IncidentSource::heartbeat('import.nightly');
+        $source = IncidentSource::heartbeat('app:import:nightly-run');
 
         $heartbeats->watch();
         $this->assertSame(0, $this->repository->countByStatuses(), 'Measured from when it was first watched.');
@@ -149,13 +149,13 @@ class IncidentTest extends KernelTestCase
         $heartbeats->watch();
         $this->assertSame(IncidentStatus::Open, $this->incident($source, HeartbeatService::CODE_MISSED)->getStatus());
 
-        $heartbeats->beat('import.nightly', false, 'The source failed.');
+        $heartbeats->beat('app:import:nightly-run', false, 'The source failed.');
         $this->assertSame('The source failed.', $this->incident($source, HeartbeatService::CODE_FAILED)->getMessage());
 
-        $heartbeats->beat('import.nightly');
+        $heartbeats->beat('app:import:nightly-run');
         $this->assertSame(IncidentStatus::Resolved, $this->incident($source, HeartbeatService::CODE_MISSED)->getStatus());
         $this->assertSame(IncidentStatus::Resolved, $this->incident($source, HeartbeatService::CODE_FAILED)->getStatus());
-        $this->assertNotNull($this->entityManager->getRepository(Heartbeat::class)->findOneBy(['key' => 'import.nightly'])->getLastSuccessAt());
+        $this->assertNotNull($this->entityManager->getRepository(Heartbeat::class)->findOneBy(['key' => 'app:import:nightly-run'])->getLastSuccessAt());
     }
 
     public function testClosedIncidentsAreDeletedAfterTheRetentionActiveOnesNever(): void
