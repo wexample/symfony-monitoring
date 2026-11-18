@@ -1,7 +1,7 @@
 {
   "name": "wexample/symfony-monitoring",
   "description": "Incidents followed until someone deals with them — opened by what reports them, the remotes first, closed by hand or when the cause goes away — and heartbeats for what must keep running",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "type": "library",
   "license": "MIT",
   "autoload": {
@@ -28,7 +28,7 @@
     "symfony/event-dispatcher": "^7.4 || ^8.0",
     "symfony/scheduler": "^7.4 || ^8.0",
     "symfony/uid": "^7.4 || ^8.0",
-    "wexample/php-remote": ">=3.0.0",
+    "wexample/php-remote": ">=4.0.0",
     "wexample/symfony-check": ">=4.0.8",
     "wexample/symfony-helpers": ">=19.3.0",
     "wexample/symfony-notification": ">=2.2.1",
