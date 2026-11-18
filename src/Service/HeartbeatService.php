@@ -14,6 +14,7 @@ use Symfony\Component\Scheduler\Attribute\AsPeriodicTask;
 use Symfony\Component\Uid\Uuid;
 use Wexample\SymfonyCheck\Enum\Severity;
 use Wexample\SymfonyMonitoring\Class\HeartbeatDefinition;
+use Wexample\SymfonyMonitoring\Class\HeartbeatState;
 use Wexample\SymfonyMonitoring\Class\IncidentSource;
 use Wexample\SymfonyMonitoring\Entity\Heartbeat;
 use Wexample\SymfonyMonitoring\Repository\HeartbeatRepository;
@@ -98,25 +99,47 @@ class HeartbeatService
     }
 
     /**
-     * Opens `missed` for each heartbeat late on its interval: measured from its
-     * last success, or from when it was first watched for one never run.
+     * Each declared heartbeat as it stands now; one never watched starts being
+     * watched here.
+     *
+     * @return array<string, HeartbeatState> by key
      */
-    #[AsPeriodicTask('10 minutes')]
-    public function watch(): void
+    public function getStates(): array
     {
         $heartbeats = $this->repository->findAllByKey();
+        $now = $this->now();
+        $states = [];
 
         foreach ($this->getDefinitions() as $key => $definition) {
             $heartbeat = $heartbeats[$key] ?? null;
             $since = $heartbeat?->getLastSuccessAt() ?? $heartbeat?->getWatchedSince() ?? $this->watchSince($key);
 
-            if ($since->add($definition->every) < $this->now()) {
+            $states[$key] = new HeartbeatState(
+                $definition,
+                $since,
+                $heartbeat?->getLastSuccessAt(),
+                $heartbeat?->getLastFailureAt(),
+                $since->add($definition->every) < $now,
+            );
+        }
+
+        return $states;
+    }
+
+    /**
+     * Opens `missed` for each heartbeat late on its interval.
+     */
+    #[AsPeriodicTask('10 minutes')]
+    public function watch(): void
+    {
+        foreach ($this->getStates() as $key => $state) {
+            if ($state->late) {
                 $this->incidents->raise(
                     IncidentSource::heartbeat($key),
                     self::CODE_MISSED,
-                    $definition->severity,
-                    sprintf('No success since %s.', $since->format(DATE_ATOM)),
-                    ['since' => $since->format(DATE_ATOM)]
+                    $state->definition->severity,
+                    sprintf('No success since %s.', $state->since->format(DATE_ATOM)),
+                    ['since' => $state->since->format(DATE_ATOM)]
                 );
             }
         }

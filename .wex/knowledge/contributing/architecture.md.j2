@@ -16,7 +16,7 @@ Under `Wexample\SymfonyMonitoring\` (PSR-4 on `src/`).
 
 ### Heartbeats
 
-{{ path("src/Entity/Heartbeat.php") }} keeps the last success and failure of a key declared in the configuration ({{ path("src/Class/HeartbeatDefinition.php") }}). {{ path("src/Service/HeartbeatService.php") }} writes it through the connection, for the same reason as the reports; `watch()` is an `#[AsPeriodicTask('10 minutes')]`.
+{{ path("src/Entity/Heartbeat.php") }} keeps the last success and failure of a key declared in the configuration ({{ path("src/Class/HeartbeatDefinition.php") }}). {{ path("src/Service/HeartbeatService.php") }} writes it through the connection, for the same reason as the reports. `getStates()` gives each declared heartbeat as it stands ({{ path("src/Class/HeartbeatState.php") }}: since when it is counted, whether it is late) — what the watch acts on and a screen shows; `watch()` is an `#[AsPeriodicTask('10 minutes')]`.
 
 ### Retention
 
