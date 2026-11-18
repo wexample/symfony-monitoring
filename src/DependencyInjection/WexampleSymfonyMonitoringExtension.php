@@ -3,6 +3,7 @@
 namespace Wexample\SymfonyMonitoring\DependencyInjection;
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Wexample\SymfonyActivity\WexampleSymfonyActivityBundle;
 use Wexample\SymfonyHelpers\DependencyInjection\AbstractWexampleSymfonyExtension;
 use Wexample\SymfonyMonitoring\EventSubscriber\IncidentAlertSubscriber;
 use Wexample\SymfonyMonitoring\EventSubscriber\IncidentHistorySubscriber;
@@ -53,8 +54,9 @@ class WexampleSymfonyMonitoringExtension extends AbstractWexampleSymfonyExtensio
             $container
         );
 
-        // The history is symfony-activity's, when the application has it.
-        if (! $container->hasExtension('wexample_symfony_activity')) {
+        // The history is symfony-activity's, when the application has it — asked of
+        // the kernel's bundles: the container given here knows no other extension.
+        if (! in_array(WexampleSymfonyActivityBundle::class, $container->getParameter('kernel.bundles'), true)) {
             $container->removeDefinition(IncidentHistorySubscriber::class);
         }
     }
