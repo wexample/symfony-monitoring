@@ -1,0 +1,61 @@
+framework:
+  default_locale: en
+  session:
+    storage_factory_id: session.storage.factory.mock_file
+  enabled_locales: [en, fr]
+  mailer:
+    dsn: 'null://null'
+    headers:
+      From: 'App <no-reply@app.test>'
+
+doctrine:
+  orm:
+    resolve_target_entities:
+      Wexample\SymfonyHelpers\Entity\Interfaces\UserEntityInterface: Wexample\SymfonyMonitoring\Tests\Fixtures\App\Entity\Member
+    mappings:
+      FixtureApp:
+        type: attribute
+        dir: '%kernel.project_dir%/Entity'
+        prefix: 'Wexample\SymfonyMonitoring\Tests\Fixtures\App\Entity'
+        is_bundle: false
+
+security:
+  providers:
+    members:
+      entity:
+        class: Wexample\SymfonyMonitoring\Tests\Fixtures\App\Entity\Member
+        property: email
+  firewalls:
+    main:
+      lazy: true
+      provider: members
+
+wexample_symfony_mail:
+  app_name: Fixture App
+
+# Errors told to everyone; the nightly import must succeed once a day.
+wexample_symfony_monitoring:
+  alerts:
+    min_severity: error
+  heartbeats:
+    import.nightly:
+      label: Nightly import
+      every: '1 day'
+
+services:
+  _defaults:
+    public: true
+  Wexample\SymfonyMonitoring\Service\IncidentRecipientService:
+    class: Wexample\SymfonyMonitoring\Tests\Fixtures\App\Service\MemberRecipientService
+    arguments: ['@doctrine.orm.entity_manager']
+  test.incident_service:
+    alias: Wexample\SymfonyMonitoring\Service\IncidentService
+  test.heartbeat_service:
+    alias: Wexample\SymfonyMonitoring\Service\HeartbeatService
+  test.incident_repository:
+    alias: Wexample\SymfonyMonitoring\Repository\IncidentRepository
+  test.purge_service:
+    alias: Wexample\SymfonyMonitoring\Service\IncidentPurgeService
+  test.remote_reporter:
+    class: Wexample\PhpRemote\Class\RemoteReporter
+    arguments: ['@event_dispatcher']

@@ -1,0 +1,14 @@
+en:
+  notification:
+    group: Monitoring
+    incident:
+      label: An incident opens or comes back
+      title: 'Incident: %source%, %code%'
+      body: '%message% (%change%, %severity%)'
+fr:
+  notification:
+    group: Supervision
+    incident:
+      label: Un incident s'ouvre ou revient
+      title: 'Incident : %source%, %code%'
+      body: '%message% (%change%, %severity%)'

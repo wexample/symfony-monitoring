@@ -1,0 +1,27 @@
+## Architecture
+
+Under `Wexample\SymfonyMonitoring\` (PSR-4 on `src/`).
+
+### Incidents
+
+{{ path("src/Entity/Incident.php") }} is one row per fingerprint — {{ path("src/Class/IncidentSource.php") }}'s hash of the source, the code and the discriminator —, unique in the table. Its {{ path("src/Enum/IncidentStatus.php") }} says whether it is active (open, acknowledged); its severity is symfony-check's `Severity`, not a scale of its own.
+
+{{ path("src/Service/IncidentService.php") }} holds two kinds of writes. Reports — `raise()`, `recover()` — come from listeners and tasks, in the middle of someone else's unit of work: they go through the connection, as symfony-activity's `ActivityRecorder` does, so a report never flushes what its caller has pending. `raise()` reads the row's state, then inserts, counts a repeat, raises the severity, or reopens a resolved one; a unique violation — another process opening it meanwhile — turns into a repeat. `recover()` is a single update, cheap enough to follow every call that works. Decisions — acknowledge, resolve, ignore — come from a person and go through the entity. Each change is dispatched as {{ path("src/Event/IncidentChangedEvent.php") }}, the incident read back whole, with an {{ path("src/Enum/IncidentChange.php") }}.
+
+### Listeners
+
+- {{ path("src/EventSubscriber/RemoteSignalSubscriber.php") }} turns php-remote's `RemoteSignal` into reports: the signal is the event, so no remote knows of this bundle.
+- {{ path("src/EventSubscriber/IncidentAlertSubscriber.php") }} sends `monitoring.incident` on an opening or a reopening at `min_severity` and above, to {{ path("src/Service/IncidentRecipientService.php") }}'s recipients: the enabled users holding a role of `alerts.roles`, through symfony-user's reversed role hierarchy and `queryByRoles()`. The category is prepended to symfony-notification's configuration by the extension, its route set when symfony-monitoring-ds is registered.
+- {{ path("src/EventSubscriber/IncidentHistorySubscriber.php") }} records each change with symfony-activity; the extension removes it when that bundle is not registered.
+
+### Heartbeats
+
+{{ path("src/Entity/Heartbeat.php") }} keeps the last success and failure of a key declared in the configuration ({{ path("src/Class/HeartbeatDefinition.php") }}). {{ path("src/Service/HeartbeatService.php") }} writes it through the connection, for the same reason as the reports; `watch()` is an `#[AsPeriodicTask('10 minutes')]`.
+
+### Retention
+
+{{ path("src/Service/IncidentPurgeService.php") }} deletes the closed incidents older than `retention_days`, an active one never; {{ path("src/Command/MonitoringPurgeCommand.php") }} runs it, daily on the Scheduler.
+
+### Tests
+
+Integration tests on a fixture kernel (`tests/Fixtures/App/`): loader, translations, mail, notification and this bundle, a `Member` as the user, and `IncidentRecipientService` replaced by one giving every member, symfony-user's accounts not being there. They cover the opening and its repeats, the recovery and the reopening, severities and discriminators, decisions and ignored incidents, the remote signals, the heartbeats and the purge.
