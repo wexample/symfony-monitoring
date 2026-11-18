@@ -1,6 +1,6 @@
 # symfony-monitoring
 
-Version: 2.0.0
+Version: 2.0.1
 
 Incidents followed until someone deals with them — opened by what reports them, the remotes first, closed by hand or when the cause goes away — and heartbeats for what must keep running
 
